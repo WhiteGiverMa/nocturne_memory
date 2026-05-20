@@ -22,10 +22,7 @@ Mapping (Neo4j -> SQLite URI):
 
 Usage:
     cd backend
-    python -m scripts.migrate_neo4j_to_sqlite
-
-    Or:
-    python scripts/migrate_neo4j_to_sqlite.py
+    python archive/neo4j_legacy/migrate_neo4j_to_sqlite.py
 """
 
 import os
@@ -35,8 +32,11 @@ import json
 from datetime import datetime
 from typing import Optional
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add backend root and this archive directory to path for imports.
+_ARCHIVE_DIR = os.path.dirname(os.path.abspath(__file__))
+_BACKEND_ROOT = os.path.dirname(os.path.dirname(_ARCHIVE_DIR))
+sys.path.insert(0, _ARCHIVE_DIR)
+sys.path.insert(0, _BACKEND_ROOT)
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -45,7 +45,7 @@ _dotenv_path = find_dotenv(usecwd=True)
 if _dotenv_path:
     load_dotenv(_dotenv_path)
 
-from db.neo4j_client import get_neo4j_client
+from neo4j_client import get_neo4j_client
 from db import get_graph_service, get_db_manager, close_db
 from db.graph import GraphService
 
