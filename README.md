@@ -718,7 +718,7 @@ docker compose down -v
 <details>
 <summary><strong>🔄 从旧版 (Neo4j) 迁移到 v1.0 (SQLite)</strong></summary>
 
-如果你之前使用的是基于 Neo4j 的旧版 Nocturne Memory（1.0 之前的版本），项目内附带了一个迁移脚本，可以将所有数据转移到新的 SQLite 后端。
+如果你之前使用的是基于 Neo4j 的旧版 Nocturne Memory（1.0 之前的版本），项目内仍封存了一个 legacy 迁移脚本，可以将旧数据转移到新的 SQLite 后端。该脚本不属于活跃运行路径，仅作为手动升级参考保留在 `backend/archive/neo4j_legacy/`。
 
 ### 前提条件
 
@@ -739,10 +739,10 @@ docker compose down -v
    export dbpassword="your_password"
    ```
 
-2. **在 `backend` 目录下运行迁移脚本**：
+2. **在 `backend` 目录下运行封存迁移脚本**：
    ```bash
    cd backend
-   python -m scripts.migrate_neo4j_to_sqlite
+   python archive/neo4j_legacy/migrate_neo4j_to_sqlite.py
    ```
    脚本会先展示数据概况，确认后才会写入数据。
 

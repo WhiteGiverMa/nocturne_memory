@@ -755,7 +755,7 @@ When you update Nocturne Memory to a new version via `git pull`, the database sc
 <details>
 <summary><strong>🔄 Migrating from Pre-1.0 (Neo4j) to v1.0 (SQLite)</strong></summary>
 
-If you were using an older version of Nocturne Memory backed by Neo4j (pre-1.0), a migration script is included to transfer all your data to the new SQLite backend.
+If you were using an older version of Nocturne Memory backed by Neo4j (pre-1.0), a legacy migration script is still archived to transfer old data to the new SQLite backend. This script is not part of the active runtime path; it is preserved only as a manual upgrade reference under `backend/archive/neo4j_legacy/`.
 
 ### Prerequisites
 
@@ -776,10 +776,10 @@ If you were using an older version of Nocturne Memory backed by Neo4j (pre-1.0),
    export dbpassword="your_password"
    ```
 
-2. **Run the migration script** from the `backend` directory:
+2. **Run the archived migration script** from the `backend` directory:
    ```bash
    cd backend
-   python -m scripts.migrate_neo4j_to_sqlite
+   python archive/neo4j_legacy/migrate_neo4j_to_sqlite.py
    ```
    The script will show a data summary and ask for confirmation before writing anything.
 
