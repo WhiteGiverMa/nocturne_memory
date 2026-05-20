@@ -55,11 +55,12 @@
   - API smoke tests 与 MCP tests 通过。
 - **不做什么**：不要在同一 PR 改 MCP 工具行为。
 
-### - [ ] P0-3. 给前端建立最低限度测试与 CI 护栏
+### - [x] P0-3. 给前端建立最低限度测试与 CI 护栏
 
 - **证据**：`frontend/` 没有 `*.test.*`、Vitest/Jest 配置，也没有 CI 中的 `npm run build`。
 - **为什么现在做**：后续要拆 `MemoryBrowser.jsx`、替换原生弹窗、改 namespace 切换；没有测试会让每一步都只能靠肉眼。
 - **第一切片**：引入 Vitest + React Testing Library，先覆盖：`App.jsx` 路由 smoke、`TokenAuth` 成功/失败流程、一个纯展示组件。
+- **已完成**：新增 Vitest + React Testing Library 测试基础设施；覆盖 `App.jsx` 认证/路由 smoke、`TokenAuth` 成功/401/网络失败流程、`DiffViewer` 纯展示组件；CI 新增 frontend job，执行 `npm ci`、`npm run build`、`npm run test:run`。
 - **验收标准**：
   - `frontend/package.json` 有 `test` / `test:run` 脚本。
   - CI 至少运行 `npm ci`, `npm run build`, `npm run test:run`。
