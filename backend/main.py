@@ -1,16 +1,10 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from api import review_router, browse_router, maintenance_router, settings_router
-from auth import BearerTokenAuthMiddleware, get_cors_config
-from namespace_middleware import NamespaceMiddleware
 from db import get_db_manager, close_db
-from health import router as health_router
+from app_builder import add_standard_middleware, create_rest_api
 import argparse
 import os
 import config as _cfg
-from config import ConfigWriteError
 from auth import enforce_network_auth
 
 # 正式启动路径只有 python main.py，host 从 config 读。
@@ -45,42 +39,14 @@ async def lifespan(app: FastAPI):
     await close_db()
 
 
-app = FastAPI(
+app = create_rest_api(
     title="Knowledge Graph API",
     description="AI长期记忆知识图谱后端",
     version="2.5.1",
     lifespan=lifespan,
 )
 
-app.add_middleware(
-    BearerTokenAuthMiddleware,
-    excluded_paths=["/health"],
-)
-
-app.add_middleware(NamespaceMiddleware)
-
-app.add_middleware(
-    CORSMiddleware,
-    **get_cors_config(),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# 注册路由
-app.include_router(health_router)
-app.include_router(review_router)
-app.include_router(browse_router)
-app.include_router(maintenance_router)
-app.include_router(settings_router)
-
-
-@app.exception_handler(ConfigWriteError)
-async def config_write_error_handler(request: Request, exc: ConfigWriteError):
-    return JSONResponse(
-        status_code=500,
-        content={"detail": str(exc)},
-    )
+add_standard_middleware(app)
 
 
 @app.get("/")

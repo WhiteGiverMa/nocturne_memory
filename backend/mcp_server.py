@@ -52,6 +52,7 @@ from system_views import (
     generate_diagnostic_view,
 )
 import contextlib
+from app_builder import build_web_app as _build_web_app
 
 
 
@@ -68,101 +69,12 @@ def build_web_app(*, extra_routes=None, extra_prefixes=None, lifespan=None):
                         so the frontend fallback knows not to capture them.
         lifespan:       Optional async context manager for the inner Starlette app.
     """
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    from starlette.applications import Starlette
-    from starlette.responses import FileResponse
-    from starlette.routing import Mount, Route
-    from starlette.types import ASGIApp, Receive, Scope, Send
-    from auth import BearerTokenAuthMiddleware, get_cors_config
-    from namespace_middleware import NamespaceMiddleware
-    from api import review_router, browse_router, maintenance_router, settings_router
-    from health import router as health_router, health_check
-    from config import ConfigWriteError
-    from fastapi import Request
-    from fastapi.responses import JSONResponse
-
-    api = FastAPI(
-        title="Nocturne Memory API",
-        docs_url="/docs",
-        openapi_url="/openapi.json",
+    return _build_web_app(
+        frontend_dir=FRONTEND_DIR,
+        extra_routes=extra_routes,
+        extra_prefixes=extra_prefixes,
+        lifespan=lifespan,
     )
-    
-    @api.exception_handler(ConfigWriteError)
-    async def config_write_error_handler(request: Request, exc: ConfigWriteError):
-        return JSONResponse(
-            status_code=500,
-            content={"detail": str(exc)},
-        )
-        
-    api.include_router(health_router)
-    api.include_router(review_router)
-    api.include_router(browse_router)
-    api.include_router(maintenance_router)
-    api.include_router(settings_router)
-
-    routes = list(extra_routes or [])
-    routes.append(Mount("/api", app=api))
-
-    async def _health_endpoint(request):
-        return await health_check()
-
-    routes.append(Route("/health", endpoint=_health_endpoint))
-
-    inner = Starlette(routes=routes, lifespan=lifespan)
-    authed = NamespaceMiddleware(
-        BearerTokenAuthMiddleware(inner, excluded_paths=["/api/health", "/health"])
-    )
-    cors_authed = CORSMiddleware(
-        authed,
-        **get_cors_config(),
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    backend_prefixes = tuple(["/api", "/health"] + list(extra_prefixes or []))
-
-    class _Fallback:
-        """Route backend prefixes to the inner app; everything else to the SPA."""
-
-        def __init__(self, backend: ASGIApp, dist: Path):
-            self.backend = backend
-            self.dist = dist
-
-        async def __call__(self, scope: Scope, receive: Receive, send: Send):
-            if scope["type"] != "http":
-                await self.backend(scope, receive, send)
-                return
-            path: str = scope.get("path", "/")
-            if any(path == p or path.startswith(p + "/") for p in backend_prefixes):
-                await self.backend(scope, receive, send)
-                return
-                
-            if not self.dist.is_dir():
-                from starlette.responses import PlainTextResponse
-                await PlainTextResponse(
-                    "Admin UI is building or missing. Please refresh in a moment...", 
-                    status_code=503
-                )(scope, receive, send)
-                return
-
-            try:
-                f = (self.dist / path.lstrip("/")).resolve()
-                if path != "/" and f.is_file() and f.is_relative_to(self.dist):
-                    await FileResponse(f)(scope, receive, send)
-                    return
-            except (ValueError, OSError):
-                pass
-                
-            index_file = self.dist / "index.html"
-            if index_file.is_file():
-                await FileResponse(index_file)(scope, receive, send)
-            else:
-                from starlette.responses import PlainTextResponse
-                await PlainTextResponse("Admin UI missing index.html.", status_code=404)(scope, receive, send)
-
-    return _Fallback(cors_authed, FRONTEND_DIR)
 
 
 async def _ensure_frontend_built():
