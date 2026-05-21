@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-Four `APIRouter` instances wired to `main.py` via `from backend.api import *` — human Dashboard endpoints that wrap `GraphService`/`ChangesetStore`/`GlossaryService`.
+Four `APIRouter` instances wired via `app_builder.py` (importlib) → `main.py` — human Dashboard endpoints that wrap `GraphService`/`ChangesetStore`/`GlossaryService`.
 
 ## STRUCTURE
 

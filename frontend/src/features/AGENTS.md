@@ -2,21 +2,23 @@
 
 ## 概览
 
-4 个功能模块, 16 个 JSX 文件, ~3200 行。纯 React + Tailwind, 无路由嵌套——所有导入直接在 App.jsx 中完成。
+4 个功能模块, 18 个 JSX 文件, ~3700 行。纯 React + Tailwind, 无路由嵌套——所有导入直接在 App.jsx 中完成。
 
 ## 结构
 
 ```
 features/
 ├── memory/                          # 主记忆浏览器 (≈Dashboard)
-│   ├── MemoryBrowser.jsx     (554)  # 单体组件: 树浏览/编辑/搜索/删除/子节点网格
+│   ├── MemoryBrowser.jsx     (640)  # 单体组件: 树浏览/编辑/搜索/删除/子节点网格
 │   └── components/
 │       ├── MemorySidebar.jsx (213)  # 递归域名树, TreeNode 惰性加载子节点 (nav_only=true)
 │       ├── NodeGridCard.jsx   (86)  # 子节点卡片: boot 开关 + disclosure/priority 徽章
 │       ├── Breadcrumb.jsx     (33)  # 路径面包屑导航
 │       ├── PriorityBadge.jsx  (28)  # 颜色映射: 0=rose, 1-2=amber, 3-5=sky, >5=slate
 │       ├── GlossaryHighlighter.jsx (204) # 行内关键词高亮 + Portal 弹窗显示关联节点
-│       └── KeywordManager.jsx (90)  # 添加/删除索引关键词
+│       ├── KeywordManager.jsx (90)  # 添加/删除索引关键词
+│       ├── CreateMemoryModal.jsx (184) # 新建记忆模态 (title/content/priority/disclosure)
+│       └── AliasManager.jsx    (249) # 别名管理面板 (添加/删除/导航)
 ├── review/                           # 变更审查
 │   └── ReviewPage.jsx         (436)  # 快照列表 + 并排 diff + 接受/拒绝/回滚
 ├── maintenance/                      # 记忆清理
@@ -57,7 +59,7 @@ features/
 ## 反模式 (features/ 范围)
 
 1. **`window.prompt()` / `window.alert()`** — `MaintenancePage.jsx:42` 用 `window.prompt` 获取日志保留天数, `alert` 显示错误。禁止新增此类调用 — 用模态/内联表单替代。
-2. **单体巨组件** — `MemoryBrowser.jsx` 554 行单文件承载浏览/编辑/搜索/删除/子节点网格。新增功能考虑抽为子组件而非继续膨胀。
+2. **单体巨组件** — `MemoryBrowser.jsx` 640 行单文件承载浏览/编辑/搜索/删除/子节点网格。新增功能考虑抽为子组件而非继续膨胀。
 3. **features/ 与 components/ 边界模糊** — `DiffViewer` 和 `SnapshotList` 在 `../../components/` 但实质是 review 专属。新 review/memory 专属组件应放在对应 feature 的 `components/` 子目录, 不要污染共享层。
 4. **不要新建 index.js barrel** — 项目显式不采用。保持全路径导入。
-5. **不要在 MemoryBrowser 里分段 header** — 当前无 `<h2>` 等节标题。新节如需标题保持内联 style 风格 (`text-sm text-slate-400` 类 span)。
+5. **不要在 MemoryBrowser 里分段 header** — 搜索叠加层和子节点区域已有少量 `<h2>` 标题。新节如需标题保持内联 style 风格 (`text-sm text-slate-400` 类 span)，避免滥用语义标题。

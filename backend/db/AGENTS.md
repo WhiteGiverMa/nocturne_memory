@@ -15,7 +15,7 @@ db/
 ├── glossary.py          # GlossaryService (284L) — Aho-Corasick multi-pattern matching, keyword→node bindings
 ├── search.py            # SearchIndexer (393L) — FTS engine (SQLite FTS5 / PostgreSQL tsvector), jieba tokenization
 ├── search_terms.py      # SearchTokenizer (107L) — custom jieba vocabulary for CJK + ASCII tokenization
-├── neo4j_client.py      # ⚠️ DEAD CODE (2247L) — legacy Neo4j client, NOT referenced by any active path
+├── neo4j_client.py      # ⚠️ DEAD CODE (2247L) — legacy Neo4j client, moved to archive/neo4j_legacy/
 └── migrations/          # 13 numbered scripts (NNN_vX.Y.Z_desc.py) + runner.py — NOT Alembic
 ```
 
@@ -67,12 +67,12 @@ Layer 0: Row-Level Primitives  →  raw SQLAlchemy, takes session as first arg
 ### Migrations
 - `runner.py` 在 `init_db()` 时按序号顺序执行 pending 脚本。
 - SQLite: 迁移前自动备份（`.db.YYYYMMDD_HHMMSS.bak`）。PostgreSQL: 无自动 backup，手动 `pg_dump`。
-- 每个迁移脚本是独立 async 函数 `async def run(engine: AsyncEngine)`。
+- 每个迁移脚本是独立 async 函数 `async def up(engine: AsyncEngine)`（runner 调用 `module.up(engine)`）。
 
 ## ANTI-PATTERNS
 
 1. **直接实例化服务** — 用 `from backend.db import get_graph_service`，不要 `GraphService(db, search)`。
-2. **在 db/ 内依赖类型安全** — 全部 6 个源文件顶部有 `# pyright:` 抑制。不要新增类型注解依赖。
+2. **在 db/ 内依赖类型安全** — 5 个源文件（database/search/models/graph/glossary）顶部有 `# pyright:` 抑制。snapshot.py 无。不要新增类型注解依赖。
 3. **跨 Layer 调用** — 不要在 Layer 0 里调用 Layer 3。不要在 Public API 里绕过 Layer 3 直接操作表。
 4. **引用 neo4j_client.py** — 死代码。任何 import 或修改都视为架构错误。
 5. **硬编码 namespace** — 始终从 `get_namespace()` 获取。不要假设 `""`。
